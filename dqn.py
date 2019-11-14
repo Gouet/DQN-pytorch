@@ -112,7 +112,7 @@ class DQN:
 
     def train(self, t_step, action, reward, state, state2, done):
         self.buffer.add(state, [action], reward, done, state2)
-        ep_ave_max_q_value = 0
+        losses = 0
 
         if self.buffer.size() > self.batch_size and t_step % self.update_time == 0:
             s_batch, a_batch, r_batch, t_batch, s2_batch = self.buffer.sample_batch(self.batch_size)
@@ -123,17 +123,14 @@ class DQN:
             t_batch = torch.FloatTensor(t_batch).to(device)
             s2_batch = torch.FloatTensor(s2_batch).to(device)
 
-
-
             target_action2 = self.target_actor(s2_batch).detach().max(1)[0].unsqueeze(1)
-
 
             q_target = r_batch + ((1 - t_batch) * self.gamma * target_action2)
 
             q_expected = self.actor(s_batch).gather(1, a_batch)
 
-            self.actor.train_step(q_target, q_expected)
+            losses = self.actor.train_step(q_target, q_expected)
 
             self.target_actor.update(self.actor)
         
-        return ep_ave_max_q_value
+        return losses

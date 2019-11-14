@@ -44,6 +44,7 @@ class Actor(torch.nn.Module):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+        return loss.cpu().detach().numpy()
 
     def update(self, actor):
         for param, target_param in zip(actor.parameters(), self.parameters()):
